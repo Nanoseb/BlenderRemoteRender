@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from .panel_ui import *
-from .core import *
+from .client_core import *
 
 classes = [
     BackendConfig,

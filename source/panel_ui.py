@@ -1,6 +1,7 @@
 import bpy
 from .client_core import RemoteRenderStill, RemoteRender, RemoteClose, RemoteConnect
 
+
 class RemoteRenderUI(bpy.types.Panel):
     """Defines remote render panel"""
     bl_label = "Remote Render"
@@ -17,7 +18,7 @@ class RemoteRenderUI(bpy.types.Panel):
 
         scene = context.scene
         rr = scene.remote_render
- 
+
         # Server settings
         header, panel = layout.panel("Connection settings")
         header.label(text="Connection settings")
@@ -31,7 +32,6 @@ class RemoteRenderUI(bpy.types.Panel):
             else:
                 row.operator("remote.connect", text="Connect", icon='INTERNET')
                 row.enabled = bool(rr.server_hostname)
-
 
         # Scheduler
         header, panel = layout.panel("Scheduler settings")

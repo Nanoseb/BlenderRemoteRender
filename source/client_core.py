@@ -13,6 +13,7 @@ class RemoteConnect(bpy.types.Operator):
         context.scene.remote_render.connect_remote()
         return {"FINISHED"}
 
+
 class RemoteClose(bpy.types.Operator):
     """Close connection to a remote render server"""
     bl_idname = "remote.close"
@@ -34,7 +35,7 @@ class RemoteRenderStill(bpy.types.Operator):
         config = {}
         # Save current project
         blender_project_filename = 'remote.blend'
-        bpy.ops.wm.save_as_mainfile(filepath=blender_project_filename, compress=True, copy=True, relative_remap=True) 
+        bpy.ops.wm.save_as_mainfile(filepath=blender_project_filename, compress=True, copy=True, relative_remap=True)
 
         # Send Blender file
         rr.send_file(blender_project_filename)
@@ -49,7 +50,7 @@ class RemoteRenderStill(bpy.types.Operator):
                     config[item.label] = item.int
                 case 'bool':
                     config[item.label] = item.bool
-        
+
         rr.send_backend_config(config)
 
         return {"FINISHED"}
@@ -65,7 +66,7 @@ class BackendConfig(bpy.types.PropertyGroup):
 
 
 class RemoteRender(bpy.types.PropertyGroup):
-    """ 
+    """
         Class handling client-server communications
     """
     # Server connection
@@ -80,11 +81,10 @@ class RemoteRender(bpy.types.PropertyGroup):
 
     status_log: bpy.props.StringProperty(name="Status log", default="")
 
-
     def log(self, comment):
         """ Add comment to the connection log """
         print(comment)
-        self.status_log +=";" + comment
+        self.status_log += ";" + comment
 
     def connect_remote(self):
         """ Connect to a remote server """
@@ -101,11 +101,11 @@ class RemoteRender(bpy.types.PropertyGroup):
             # Register timer for message polling
             if not bpy.app.timers.is_registered(self.timer_poller):
                 bpy.app.timers.register(self.timer_poller)
-            
+
     def init_server_config(self, config):
-        """ 
-            Initialise backend server configuration 
-            The server sends a dictionary containing user editable fields 
+        """
+            Initialise backend server configuration
+            The server sends a dictionary containing user editable fields
         """
         self.log("Get backend config")
 
@@ -127,7 +127,6 @@ class RemoteRender(bpy.types.PropertyGroup):
                 case "bool":
                     self.backend_config[-1].bool = bool(int(config[key]['default']))
 
-
     def close_remote(self):
         """ Close remote connection """
         if self.server_connected:
@@ -142,7 +141,6 @@ class RemoteRender(bpy.types.PropertyGroup):
             bpy.types.WindowManager.socket.close()
             self.log("Disconnected")
 
-
     def send_file(self, path):
         """ Send file to remote server """
         bpy.types.WindowManager.socket.send_string(msg.FILE, zmq.SNDMORE)
@@ -155,13 +153,12 @@ class RemoteRender(bpy.types.PropertyGroup):
         """ Helper function to send the user edited backend configuration """
         bpy.types.WindowManager.socket.send_string(msg.BACKEND_CONFIG, zmq.SNDMORE)
         bpy.types.WindowManager.socket.send_json(config)
- 
 
     def timer_poller(self):
         """ Timer receiving and acting on zmq received messages """
         try:
             message = bpy.types.WindowManager.socket.recv_multipart(zmq.NOBLOCK)
-        except zmq.Again as e: # Error raised when no message is in the queue
+        except zmq.Again as e:  # Error raised when no message is in the queue
             return 0.1
 
         header = message[0].decode("utf-8")
@@ -179,5 +176,3 @@ class RemoteRender(bpy.types.PropertyGroup):
                 self.log("Command not recognised: {}".format(header))
 
         return 0.1
-
-

@@ -15,11 +15,11 @@ from .client_core import *
 
 classes = [
     BackendConfig,
-    RemoteRenderUI, 
-    RemoteRender, 
-    RemoteRenderStill, 
+    RemoteRenderUI,
+    RemoteRender,
+    RemoteRenderStill,
     RemoteClose,
-    RemoteConnect 
+    RemoteConnect
 ]
 
 bl_info = {

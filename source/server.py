@@ -2,6 +2,7 @@ import json
 import zmq
 from messages import msg
 
+
 class BackendSlurm():
     def __init__(self):
         self.render_config = {}
@@ -16,25 +17,27 @@ class BackendSlurm():
     def get_status(self):
         return
 
-    def cancel_render(self): 
+    def cancel_render(self):
         return
 
     def get_server_config(self):
         config = {}
         config['backend'] = "Slurm"
-        config['Job Name'] = {'type': 'string', 'default':'Blender_render'}
-        config['Time'] = {'type': 'string', 'default':'00:20:00'}
-        config['Account'] = {'type': 'string', 'default':''}
-        config['Partition'] = {'type': 'string', 'default':'standard'}
-        config['QOS'] = {'type': 'string', 'default':'standard'}
-        config['Max nb Jobs'] = {'type': 'int', 'default':'4'}
+        config['Job Name'] = {'type': 'string', 'default': 'Blender_render'}
+        config['Time'] = {'type': 'string', 'default': '00:20:00'}
+        config['Account'] = {'type': 'string', 'default': ''}
+        config['Partition'] = {'type': 'string', 'default': 'standard'}
+        config['QOS'] = {'type': 'string', 'default': 'standard'}
+        config['Max nb Jobs'] = {'type': 'int', 'default': '4'}
         return config
+
 
 class Server():
     """
         Class handling the communication with the client addon. Render actions are delagated to the Backend class.
         This class only handles the communication and IO.
     """
+
     def __init__(self, listen_port, backend):
         self.backend = backend
         self.listen_port = listen_port
@@ -51,23 +54,22 @@ class Server():
         self.socket.send(self.identity, zmq.SNDMORE)
         self.socket.send_string(text)
 
-    def save_file(self, path, file):
-        """ Saves file to disk and sends acknoledgement to client """
-        with open(path, "wb") as f:
-            f.write(file)
-        self.log("File {} written".format(path))
-        self.send_string(msg.FILE_ACK)
-        return
-
     def send_backend_config(self, dict):
         """ Sends dictionarry serialised using json """
         self.socket.send(self.identity, zmq.SNDMORE)
         self.socket.send_string(msg.BACKEND_CONFIG, zmq.SNDMORE)
         self.socket.send_json(dict)
 
+    def save_file(self, path, file):
+        """ Saves file to disk and sends acknoledgement to client """
+        with open(path, "wb") as f:
+            f.write(file)
+        self.log("File {} written".format(path))
+        self.send_string(msg.FILE_ACK)
+
     def run(self):
         """
-            Run the server 
+            Run the server
         """
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.ROUTER)
@@ -110,7 +112,6 @@ class Server():
 
                 case _:
                     self.log("Command not recognised: {}".format(header))
-
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 
 class Backend():
-    def get_blender_command(self, blend_file):
-        return "blender {}".format(blend_file)
+    def get_blender_command(self, blend_file, render_device):
+        return "blender -b {} -o //output_ -f 17  -- --cycles-device {}".format(blend_file, render_device)
 
 
 class BackendCLI(Backend):
@@ -11,7 +11,7 @@ class BackendCLI(Backend):
         self.default_config = {}
         self.default_config['backend'] = "CLI"
         self.default_config['max-nb-jobs'] = {'type': 'int', 'default': '6', 'label': 'Simultaneous renders'}
-        self.default_config['render-backend'] = {'type': 'string', 'default': 'GPU', 'label': 'Render backend (CPU/GPU)'}
+        self.default_config['render-backend'] = {'type': 'string', 'default': 'GPU', 'label': 'Render backend (CPU CUDA OPTIX HIP ONEAPI METAL)'}
         return
 
     def setup_run(self):

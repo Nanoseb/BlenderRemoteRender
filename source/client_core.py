@@ -22,7 +22,7 @@ class RemoteClose(bpy.types.Operator):
         context.scene.remote_render.close_remote()
         return {"FINISHED"}
 
-class RemoteRenderStill(bpy.types.Operator):
+class RemoteRenderFrame(bpy.types.Operator):
     """Render current project on remote server"""
     bl_idname = "remote.render"
     bl_label = "Render"
@@ -32,7 +32,7 @@ class RemoteRenderStill(bpy.types.Operator):
         rr = context.scene.remote_render
         config = {}
         # Save current project
-        blender_project_filename = 'remote.blend'
+        blender_project_filename = "remote.blend"
         bpy.ops.wm.save_as_mainfile(filepath=blender_project_filename, compress=True, copy=True, relative_remap=True) 
 
         # Send Blender file
@@ -50,6 +50,8 @@ class RemoteRenderStill(bpy.types.Operator):
                     config[item.key] = item.bool
         
         rr.send_backend_config(config)
+
+        rr.send_strings([msg.START_RENDER, blender_project_filename])
 
         return {"FINISHED"}
 
@@ -142,6 +144,12 @@ class RemoteRender(bpy.types.PropertyGroup):
 
             bpy.types.WindowManager.socket.close()
             self.log("Disconnected")
+
+    def send_strings(self, string_list):
+        """ Sends a list of strings as a multipart message """
+        for string in string_list[:-1]:
+            bpy.types.WindowManager.socket.send_string(string, zmq.SNDMORE)
+        bpy.types.WindowManager.socket.send_string(string_list[-1])
 
 
     def send_file(self, path):

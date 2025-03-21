@@ -17,7 +17,7 @@ classes = [
     BackendConfig,
     RemoteRenderUI,
     RemoteRender,
-    RemoteRenderStill,
+    RemoteRenderFrame,
     RemoteClose,
     RemoteConnect
 ]

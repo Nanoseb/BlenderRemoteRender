@@ -1,3 +1,4 @@
+import subprocess
 
 class Backend():
     def get_blender_command(self, blend_file, render_device):
@@ -18,6 +19,7 @@ class BackendCLI(Backend):
         return
 
     def start_render(self):
+
         return
 
     def get_status(self):
@@ -46,27 +48,41 @@ class BackendSlurm(Backend):
     def setup_run(self):
         return
 
-    def start_render(self):
+    def start_render(self, blend_file):
 
         # Write slurm jobfile
         jobfile_name = 'jobfile.slurm'
         with open(jobfile_name, 'w') as jobfile:
-            jobfile.write("#!/bin/bash")
+            jobfile.write("#!/bin/bash\n")
 
             for key in self.render_config:
                 if key == 'max-nb-jobs':
                     continue
 
-                jobfile.write("#SBATCH --{}={}".format(key, self.render_config[key]))
+                jobfile.write("#SBATCH --{}={}\n".format(key, self.render_config[key]))
             
-            jobfile.write("#SBATCH --nodes=1")
-            jobfile.write("module load blender")
-            jobfile.write("{} {}".format(self.blender_path, super().get_blender_command(self.blend_file)))
-
+            jobfile.write("#SBATCH --nodes=1\n")
+            jobfile.write("module load blender\n")
+            jobfile.write("{}\n".format(super().get_blender_command(blend_file, "CPU")))
 
         # Submit jobfile
-        #for i in range(self.render_config['max-nb-jobs']):
-        #   popen.stuff(['sbatch', jobfile_name])
+        job_id_list = []
+        for i in range(self.render_config['max-nb-jobs']):
+
+            result = subprocess.run(['sbatch', jobfile_name],
+                                    capture_output = True,
+                                    text = True)
+            if result.returncode != 0 or result.stderr or not result.stdout.startswith("Submitted batch job"):
+                # error with submition
+                return result.returncode, result.stderr
+            else:
+                job_id_list.append(int(result.stdout.split(" ")[-1]))
+
+        with open('job_id.log', 'a') as job_id_file:
+            for job_id in job_id_list:
+                job_id_file.write(str(job_id) + "\n")
+
+        return 0, ""
 
 
     def get_status(self):

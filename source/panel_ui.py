@@ -1,5 +1,5 @@
 import bpy
-from .client_core import RemoteRenderStill, RemoteRender, RemoteClose, RemoteConnect
+from .client_core import RemoteRenderFrame, RemoteRender, RemoteClose, RemoteConnect
 
 
 class RemoteRenderUI(bpy.types.Panel):

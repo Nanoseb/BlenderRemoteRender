@@ -1,12 +1,12 @@
 import json
 import zmq
 from messages import msg
-from .backend import Backend, BackendSlurm
+from backend import Backend, BackendSlurm
 
 
 class Server():
     """
-        Class handling the communication with the client addon. Render actions are delagated to the Backend class.
+        Class handling the communication with the client addon. Render actions are delegated to the Backend class.
         This class only handles the communication and IO.
     """
 
@@ -81,6 +81,14 @@ class Server():
 
                 case msg.BACKEND_CONFIG:
                     self.backend.render_config = json.loads(message[1])
+
+                case msg.START_RENDER:
+                    return_code, error = self.backend.start_render(message[1].decode("utf-8"))
+                    if return_code == 0:
+                        self.log("Renders in progress")
+                    else:
+                        self.log("Error with starting renders")
+                        self.log(error)
 
                 case _:
                     self.log("Command not recognised: {}".format(header))

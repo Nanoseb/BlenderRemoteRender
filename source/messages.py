@@ -13,6 +13,6 @@ class Messages():
         self.FILE_ACK = "file_ack"
         self.BACKEND_CONFIG = "backend_config"
         self.START_RENDER = "start_render"
-
+        self.GET_RENDER_OUTPUT = "get_render_output"
 
 msg = Messages()

@@ -1,6 +1,8 @@
+import os
 import bpy
 import zmq
 import json
+from pathlib import Path
 from .messages import msg
 
 
@@ -37,17 +39,24 @@ class RemoteRenderFrame(bpy.types.Operator):
 
         # Send Blender file
         rr.send_file(blender_project_filename)
-        config["blender_file"] = blender_project_filename
 
         # Send backend config
+        config[rr.backend_name] = {}
         for item in rr.backend_config:
+            if item.key == 'max-nb-jobs':
+                continue
             match item.type:
                 case 'string':
-                    config[item.key] = item.string
+                    config[rr.backend_name][item.key] = item.string
                 case 'int':
-                    config[item.key] = item.int
+                    config[rr.backend_name][item.key] = item.int
                 case 'bool':
-                    config[item.key] = item.bool
+                    config[rr.backend_name][item.key] = item.bool
+
+        config['frame-start'] = 17
+        config['frame-end'] = 17
+        config['job-name'] = rr.backend_config['job-name'].string
+        config['max-nb-jobs'] = rr.backend_config['max-nb-jobs'].int
         
         rr.send_backend_config(config)
 
@@ -165,7 +174,12 @@ class RemoteRender(bpy.types.PropertyGroup):
         bpy.types.WindowManager.socket.send_string(msg.BACKEND_CONFIG, zmq.SNDMORE)
         bpy.types.WindowManager.socket.send_json(config)
  
-
+    def save_file(self, path, file):
+        """ Saves file to disk """
+        path = Path(path)
+        os.mkdirs(path.parent, exist_ok=True)
+        with open(path, "wb") as f:
+            f.write(file)
 
     def timer_poller(self):
         """ Timer receiving and acting on zmq received messages """
@@ -185,6 +199,13 @@ class RemoteRender(bpy.types.PropertyGroup):
             case msg.BACKEND_CONFIG:
                 # Reception of the backend configuration
                 self.init_server_config(json.loads(message[1]))
+            case msg.FILE:
+                # Getting file
+                path = message[1]
+                self.get_file(path, message[2])
+                if path.endswith('png'):
+                    bpy.ops.image.open(path)
+
             case _:
                 self.log("Command not recognised: {}".format(header))
 

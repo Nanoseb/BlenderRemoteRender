@@ -9,7 +9,6 @@ class Server():
         Class handling the communication with the client addon. Render actions are delegated to the Backend class.
         This class only handles the communication and IO.
     """
-
     def __init__(self, listen_port, backend):
         self.backend = backend
         self.listen_port = listen_port
@@ -39,6 +38,16 @@ class Server():
         self.log("File {} written".format(path))
         self.send_string(msg.FILE_ACK)
 
+    def send_file(self, path):
+        """ Send single file to client """
+        self.socket.send(self.identity, zmq.SNDMORE)
+        self.socket.send_string(msg.FILE, zmq.SNDMORE)
+        self.socket.send_string(path, zmq.SNDMORE)
+        with open(path, 'rb') as f:
+            self.socket.send(f.read())
+        self.log("File {} sent".format(path))
+
+
     def run(self):
         """
             Run the server
@@ -46,6 +55,7 @@ class Server():
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.ROUTER)
         self.socket.bind("tcp://*:{}".format(self.listen_port))
+        self.log("{} backend".format(self.backend.name))
         self.log("listening to *:{}".format(self.listen_port))
 
         while True:
@@ -55,7 +65,7 @@ class Server():
                 self.identity = identity
             elif self.identity != identity:
                 self.log("Rejecting connection from new client", type="error")
-                message = self.socket.recv_multipart()
+                _ = self.socket.recv_multipart()
                 continue
 
             message = self.socket.recv_multipart()
@@ -89,6 +99,13 @@ class Server():
                     else:
                         self.log("Error with starting renders")
                         self.log(error)
+
+                case msg.GET_RENDER_OUTPUT:
+                    export_path = message[1].decode("utf-8")
+                    filelist = self.backend.get_rendered_filelist(export_path)
+                    self.log("Sending {} files to client".format(len(filelist)))
+                    for file in filelist:
+                        self.send_file(file)
 
                 case _:
                     self.log("Command not recognised: {}".format(header))

@@ -8,11 +8,12 @@ class Backend():
     def __init__(self):
         self.render_extension = 'png'
 
-    def get_blender_command(self, blend_file, render_device, frame_start, frame_end):
-        return "blender -b {} -o //output_ -f {}-{}  -- --cycles-device {}".format(blend_file, 
-                                                                                   render_device,
-                                                                                   frame_start, 
-                                                                                   frame_end)
+    def get_blender_command(self, blend_file, export_path, render_device, frame_start, frame_end):
+        return "blender -b {} -o //{}/output_ -f {}..{}  -- --cycles-device {}".format(blend_file, 
+                                                                                      export_path,
+                                                                                      frame_start, 
+                                                                                      frame_end,
+                                                                                      render_device)
 
     def get_new_export_path(self, name):
         return "{}-{}".format(datetime.now().strftime("%Y%m%d-%H%M%S"), name.replace(" ", "_"))
@@ -100,7 +101,7 @@ class BackendSlurm(Backend):
             
             jobfile.write("#SBATCH --nodes=1\n")
             jobfile.write("module load blender\n")
-            jobfile.write("{}\n".format(super().get_blender_command(blend_file, "CPU", frame_start, frame_end)))
+            jobfile.write("{}\n".format(super().get_blender_command(blend_file, export_path, "CPU", frame_start, frame_end)))
 
         # Submit jobfile
         job_id_list = []
@@ -127,13 +128,13 @@ class BackendSlurm(Backend):
         else:
             data = {}
         
-        data['export_path'] = {}
+        data[export_path] = {}
         if job_ids:
             for jobid in job_ids:
                 data[export_path][str(jobid)] = {'status': 'SUBMITTED'}
 
         with open(filename, 'w') as f:
-            json.dump(data)
+            json.dump(data, f)
 
 
     def get_status(self, export_path):

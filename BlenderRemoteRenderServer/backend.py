@@ -1,4 +1,5 @@
 import subprocess
+import shutil
 import json
 from datetime import datetime
 import os.path
@@ -9,7 +10,8 @@ class Backend():
         self.render_extension = 'png'
 
     def get_blender_command(self, blend_file, export_path, render_device, frame_start, frame_end):
-        return f"blender -b {blend_file} -o //{export_path}/output_ -f {frame_start}..{frame_end}  -- --cycles-device {render_device}"
+        batch_render_script = os.join(os.dirname(__file__), "batch_render.py")
+        return f"blender -b {blend_file} -o //{export_path}/output_ --python {batch_render_script} -- --frames {frame_start}..{frame_end}  --cycles-device {render_device}"
 
     def get_new_export_path(self, name):
         return "{}-{}".format(datetime.now().strftime("%Y%m%d-%H%M%S"), name.replace(" ", "_"))
@@ -22,15 +24,6 @@ class Backend():
 
     def get_nb_rendered(self, export_path):
         return len(self.get_rendered_filelist(export_path))
-
-    def write_batch_render_script(self, path):
-
-
-        """
-        
-        
-        
-        """
 
 
 class BackendCLI(Backend):
@@ -85,6 +78,8 @@ class BackendSlurm(Backend):
         # Write slurm jobfile
         jobfile_name = 'jobfile.slurm'
         export_path = self.get_new_export_path(self.render_config['job-name'])
+
+        self.write_batch_render_script()
 
         frame_start = self.render_config['frame-start']
         frame_end = self.render_config['frame-end']

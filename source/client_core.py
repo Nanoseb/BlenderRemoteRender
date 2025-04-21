@@ -24,46 +24,45 @@ class RemoteClose(bpy.types.Operator):
         context.scene.remote_render.close_remote()
         return {"FINISHED"}
 
+class RemoteRetrieveRenders(bpy.types.Operator):
+    """Close connection to a remote render server"""
+    bl_idname = "remote.retrieve_renders"
+    bl_label = "Get renders"
+
+    def execute(self, context):
+        rr = context.scene.remote_render
+        rr.send_string
+        context.scene.remote_render.get_renders()
+        return {"FINISHED"}
+
+class RemoteRenderAnim(bpy.types.Operator):
+    """Render current project on remote server"""
+    bl_idname = "remote.render_anim"
+    bl_label = "Render Animation"
+    bl_icon = 'RENDER_ANIMATION'
+
+    def execute(self, context):
+        rr = context.scene.remote_render
+        rr.render_frames(context.scene.frame_start, context.scene.frame_end)
+
+        return {"FINISHED"}
+
+
 class RemoteRenderFrame(bpy.types.Operator):
     """Render current project on remote server"""
-    bl_idname = "remote.render"
-    bl_label = "Render"
+    bl_idname = "remote.render_frame"
+    bl_label = "Render Image"
     bl_icon = 'RENDER'
 
     def execute(self, context):
         rr = context.scene.remote_render
-        config = {}
-        # Save current project
-        blender_project_filename = "remote.blend"
-        bpy.ops.wm.save_as_mainfile(filepath=blender_project_filename, compress=True, copy=True, relative_remap=True) 
-
-        # Send Blender file
-        rr.send_file(blender_project_filename)
-
-        # Send backend config
-        config[rr.backend_name] = {}
-        for item in rr.backend_config:
-            if item.key == 'max-nb-jobs':
-                continue
-            match item.type:
-                case 'string':
-                    config[rr.backend_name][item.key] = item.string
-                case 'int':
-                    config[rr.backend_name][item.key] = item.int
-                case 'bool':
-                    config[rr.backend_name][item.key] = item.bool
-
-        config['frame-start'] = 17
-        config['frame-end'] = 17
-        config['job-name'] = rr.backend_config['job-name'].string
-        config['max-nb-jobs'] = rr.backend_config['max-nb-jobs'].int
-        
-        rr.send_backend_config(config)
-
-        rr.send_strings([msg.START_RENDER, blender_project_filename])
+        rr.render_frames(context.scene.frame_current)
 
         return {"FINISHED"}
 
+# class JOBS_UL_jobstatus(bpy.types.UIList):
+#     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
+#         return
 
 class BackendConfig(bpy.types.PropertyGroup):
     """ Data structure containing user editable server backend properties """
@@ -80,7 +79,7 @@ class RemoteRender(bpy.types.PropertyGroup):
         Class handling client-server communications
     """
     # Server connection
-    server_hostname: bpy.props.StringProperty(name="Hostname", default="172.30.17.231")
+    server_hostname: bpy.props.StringProperty(name="Hostname", default="127.0.0.1")
     server_port: bpy.props.IntProperty(name="Port", default=31415)
     server_connected: bpy.props.BoolProperty(name="Connected", default=False)
 
@@ -96,6 +95,43 @@ class RemoteRender(bpy.types.PropertyGroup):
         """ Add comment to the connection log """
         print(comment)
         self.status_log +=";" + comment
+
+    def render_frames(self, frame_start, frame_end=None):
+
+        config = {}
+        # Save current project
+        blender_project_filename = "remote.blend"
+        bpy.ops.wm.save_as_mainfile(filepath=blender_project_filename, compress=True, copy=True, relative_remap=True) 
+
+        # Send Blender file
+        self.send_file(blender_project_filename)
+
+        # Send backend config
+        config[self.backend_name] = {}
+        for item in self.backend_config:
+            match item.key:
+                case 'max-nb-jobs':
+                    config['max-nb-jobs'] = item.int
+                case 'job-name':
+                    config['job-name'] = item.string
+                case _:
+                    match item.type:
+                        case 'string':
+                            config[self.backend_name][item.key] = item.string
+                        case 'int':
+                            config[self.backend_name][item.key] = item.int
+                        case 'bool':
+                            config[self.backend_name][item.key] = item.bool
+
+        config['frame-start'] = frame_start
+        if frame_end:
+            config['frame-end'] = frame_end
+        else:
+            config['frame-end'] = frame_start
+        
+        self.send_backend_config(config)
+
+        self.send_strings([msg.START_RENDER, blender_project_filename])
 
     def connect_remote(self):
         """ Connect to a remote server """
@@ -160,7 +196,6 @@ class RemoteRender(bpy.types.PropertyGroup):
             bpy.types.WindowManager.socket.send_string(string, zmq.SNDMORE)
         bpy.types.WindowManager.socket.send_string(string_list[-1])
 
-
     def send_file(self, path):
         """ Send file to remote server """
         bpy.types.WindowManager.socket.send_string(msg.FILE, zmq.SNDMORE)
@@ -205,7 +240,6 @@ class RemoteRender(bpy.types.PropertyGroup):
                 self.get_file(path, message[2])
                 if path.endswith('png'):
                     bpy.ops.image.open(path)
-
             case _:
                 self.log("Command not recognised: {}".format(header))
 

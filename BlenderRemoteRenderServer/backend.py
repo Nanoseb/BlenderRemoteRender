@@ -9,11 +9,7 @@ class Backend():
         self.render_extension = 'png'
 
     def get_blender_command(self, blend_file, export_path, render_device, frame_start, frame_end):
-        return "blender -b {} -o //{}/output_ -f {}..{}  -- --cycles-device {}".format(blend_file, 
-                                                                                      export_path,
-                                                                                      frame_start, 
-                                                                                      frame_end,
-                                                                                      render_device)
+        return f"blender -b {blend_file} -o //{export_path}/output_ -f {frame_start}..{frame_end}  -- --cycles-device {render_device}"
 
     def get_new_export_path(self, name):
         return "{}-{}".format(datetime.now().strftime("%Y%m%d-%H%M%S"), name.replace(" ", "_"))

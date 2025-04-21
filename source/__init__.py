@@ -18,6 +18,7 @@ classes = [
     RemoteRenderUI,
     RemoteRender,
     RemoteRenderFrame,
+    RemoteRenderAnim,
     RemoteClose,
     RemoteConnect
 ]

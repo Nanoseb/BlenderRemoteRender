@@ -1,5 +1,5 @@
 import bpy
-from .client_core import RemoteRenderFrame, RemoteRender, RemoteClose, RemoteConnect
+from .client_core import RemoteRenderFrame, RemoteRenderAnim, RemoteRender, RemoteClose, RemoteConnect
 
 
 class RemoteRenderUI(bpy.types.Panel):
@@ -49,8 +49,19 @@ class RemoteRenderUI(bpy.types.Panel):
             row.prop(scene, "frame_end")
 
             row = panel.row(align=True)
-            row.operator("remote.render", text="Render", icon='RENDER_STILL')
+            row.operator("remote.render_frame", icon='RENDER_STILL')
             row.enabled = rr.server_connected
+
+            row = panel.row(align=True)
+            row.operator("remote.render_anim", icon='RENDER_ANIMATION')
+            row.enabled = rr.server_connected
+
+        # # Status table
+        # header, panel = layout.panel("Status")
+        # header.label(text="Status")
+        # table = header.column(align=True)
+        # table.template_list("UL_JobList", "")
+
 
         # Status
         header, panel = layout.panel("Status")

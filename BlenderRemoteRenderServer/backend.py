@@ -79,8 +79,6 @@ class BackendSlurm(Backend):
         jobfile_name = 'jobfile.slurm'
         export_path = self.get_new_export_path(self.render_config['job-name'])
 
-        self.write_batch_render_script()
-
         frame_start = self.render_config['frame-start']
         frame_end = self.render_config['frame-end']
 

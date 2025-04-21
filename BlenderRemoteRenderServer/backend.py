@@ -10,7 +10,7 @@ class Backend():
         self.render_extension = 'png'
 
     def get_blender_command(self, blend_file, export_path, render_device, frame_start, frame_end):
-        batch_render_script = os.join(os.dirname(__file__), "batch_render.py")
+        batch_render_script = os.path.join(os.path.dirname(__file__), "batch_render.py")
         return f"blender -b {blend_file} -o //{export_path}/output_ --python {batch_render_script} -- --frames {frame_start}..{frame_end}  --cycles-device {render_device}"
 
     def get_new_export_path(self, name):
@@ -18,7 +18,7 @@ class Backend():
 
     def get_rendered_filelist(self, export_path):
         filenames = next(walk(export_path), (None, None, []))[2]
-        return [ os.join(export_path, filename) for filename in filenames 
+        return [ os.path.join(export_path, filename) for filename in filenames 
                 if (filename.endswith(self.render_extension) and 
                     filename.startswith('output_')) ]
 

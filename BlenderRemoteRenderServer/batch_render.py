@@ -19,18 +19,15 @@ def parse_arguments():
     """
     Parse command line arguments meant for sequence data and overwrite some of the 
     """
-    parser = argparse.ArgumentParser(description="Render set of frames, allows running multiple instances concurently")
-    parser.add_argument("--frames", help="Range of frames to render, should be in format '1..17'. If absent, using the frame range inside the .blend file.")
 
-    # Parse arguments after "--"
-    if not "--" in sys.argv:
+    if not "--frames" in sys.argv:
         Scene = bpy.context.scene
         return Scene.frame_start, Scene.frame_end
 
-    args = parser.parse_args(args=sys.argv[sys.argv.index("--") + 1:])
+    args = sys.argv[sys.argv.index("--frames") + 1:]
 
-    frame_start = int(args.frames.split("..")[0])
-    frame_end = int(args.frames.split("..")[1])
+    frame_start = int(args[0].split("..")[0])
+    frame_end = int(args[0].split("..")[1])
 
     return frame_start, frame_end
 

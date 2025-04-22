@@ -31,6 +31,9 @@ wheels = [
  "./wheels/pyzmq-26.2.1-cp310-cp310-manylinux_2_28_x86_64.whl",
  "./wheels/pyzmq-26.2.1-cp311-cp311-macosx_10_15_universal2.whl",
  "./wheels/pyzmq-26.2.1-cp311-cp311-win_amd64.whl",
+ "./wheels/pyzmq-26.4.0-cp310-cp310-manylinux_2_28_x86_64.whl",
+ "./wheels/pyzmq-26.4.0-cp311-cp311-manylinux_2_28_x86_64.whl",
+ "./wheels/pyzmq-26.4.0-cp312-cp312-manylinux_2_28_x86_64.whl",
  "./wheels/zmq-0.0.0-py3-none-any.whl",
 ]
 
